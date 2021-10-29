@@ -75,3 +75,5 @@ DerivedDataCache/*
 
 # Content not included unless specifically added
 Content/*
+!Content/Blueprints/*
+!Content/Map/*.umap
