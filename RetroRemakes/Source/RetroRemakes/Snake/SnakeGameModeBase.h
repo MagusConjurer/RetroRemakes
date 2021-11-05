@@ -23,15 +23,21 @@ public:
 	void UpdateScore(uint8 Value);
 
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
-	TSubclassOf<AActor> FoodClass;	
+	TSubclassOf<AActor> FoodActorClass;
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode");
-	TSubclassOf<AActor> SnakeBodyClass;
+	TSubclassOf<AActor> SnakeBodyActorClass;
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
 	TSubclassOf<UUserWidget> GameHUDClass;
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
 	UPaperFlipbook* HeadFlipbook;
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
 	UPaperFlipbook* BodyFlipbook;
+	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
+	UPaperFlipbook* HeadDeathFlipbook;
+	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
+	UPaperFlipbook* BodyDeathFlipbook;
+	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
+	UPaperFlipbook* BlankFlipbook;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Snake Game Mode")
 	UUserWidget* GameHUDWidget;
@@ -48,6 +54,8 @@ private:
 	void KillSnake();
 	UFUNCTION()
 	void SelectRandomDirection();
+	UFUNCTION()
+	void SetBlankFlipbook();
 	
 	TArray<AActor*> SnakePartsArray;
 	UPaperFlipbookComponent* FlipbookComponent;

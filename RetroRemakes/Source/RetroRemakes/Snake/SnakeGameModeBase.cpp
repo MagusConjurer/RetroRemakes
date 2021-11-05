@@ -19,68 +19,87 @@ void ASnakeGameModeBase::BeginPlay()
 	}
 
 	IsDead = false;
+	SelectRandomDirection();
 }
 
+// Add a snake body part at the given location
 void ASnakeGameModeBase::SpawnNewSnakePart(FVector SpawnLocation, bool IsHead)
 {
 	// Spawn a SnakeBody actor at the given location while ignoring collision
 	FActorSpawnParameters SpawnParams = FActorSpawnParameters();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	AActor* SnakeBodyActor = GetWorld()->SpawnActor(SnakeBodyClass, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
+	AActor* SnakeBodyActor = GetWorld()->SpawnActor(SnakeBodyActorClass, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
 
 	if (SnakeBodyActor != nullptr)
 	{
-		if (IsHead && IsValid(HeadFlipbook))
-		{
-			FlipbookComponent = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook Component"));
-			FlipbookComponent->SetFlipbook(HeadFlipbook);
-			SnakeBodyActor->SetRootComponent(FlipbookComponent);
-		}
 		if (!IsHead && IsValid(BodyFlipbook))
 		{
 			FlipbookComponent = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook Component"));
 			FlipbookComponent->SetFlipbook(BodyFlipbook);
 			SnakeBodyActor->SetRootComponent(FlipbookComponent);
 		}
+		if (IsHead && IsValid(HeadFlipbook))
+		{
+			FlipbookComponent = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook Component"));
+			FlipbookComponent->SetFlipbook(HeadFlipbook);
+			SnakeBodyActor->SetRootComponent(FlipbookComponent);
+			IsHead = false;
+		}
+		
 		SnakePartsArray.Add(SnakeBodyActor);
 	}
 
-	// Add to SnakePartsArray (SpawnActor result)
-	// Then set IsHead
+	// If using a simple sprite, can use the below to rotate it
 	// SetActorRotation(GetRandomInt with max of 3)
 	// Select(4 options) -> SetY(Pitch)
 	// 0 = 0, 1 = 90, 2 = 180, 3 = 270
-
 }
 
+// Get a random location within the play area and spawn a FoodActor
 void ASnakeGameModeBase::SpawnFood()
 {
 	// Get a random point within the playable area
 	X_Max = (FMath::RandRange((X_Max * -1.f), X_Max) / 100.f) * 100.f;
 	Z_Max = (FMath::RandRange((X_Max * -1.f), X_Max) / 100.f) * 100.f;
-	//SpawnActorFromClass - class = BP_Food
-	// SpawnTransformLocation (X_Max, -1, Z_Max)
-	//CollisionHandling = AlwaysSpawn, IgnoreCollisions
-	// Set FoodActor REF
 
+	// Spawn a Food actor at the given location while ignoring collision
+	FActorSpawnParameters SpawnParams = FActorSpawnParameters();
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	FVector SpawnLocation = FVector(X_Max, -1, Z_Max);
+	AActor* FoodActor = GetWorld()->SpawnActor(FoodActorClass, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
 }
 
+// Get the component from the actor, which should be a UPaperFlipbookComponent and update the flipbook
 void ASnakeGameModeBase::KillSnake()
 {
 	IsDead = true;
-	for(AActor* Part : SnakePartsArray)
+	for(int i = 0; i < SnakePartsArray.Num() - 1; i++)
 	{
-		//get paperflipbook
-		//set flipbook
-		// if index 0 set to head death
-		// all others set to body death
-		
-
+		AActor* PartActor = SnakePartsArray[i];
+		UPaperFlipbookComponent* ToKillComponent = Cast<UPaperFlipbookComponent>(PartActor->GetRootComponent());
+		if (i == 0)
+		{
+			ToKillComponent->SetFlipbook(HeadDeathFlipbook);
+		} 
+		else
+		{
+			ToKillComponent->SetFlipbook(BodyDeathFlipbook);
+		}
 	}
-	// Delay .5
+
+	FTimerHandle TimerHandle;
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([&] {SetBlankFlipbook(); });
+	GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, 0.5f, false);
+}
+
+// Helper method for KillSnake. Updates the flipbook to a blank flipbook.
+void ASnakeGameModeBase::SetBlankFlipbook()
+{
 	for (AActor* Part : SnakePartsArray)
 	{
-		//set all to blank flipbook
+		UPaperFlipbookComponent* ToSetBlankComponent = Cast<UPaperFlipbookComponent>(Part->GetRootComponent());
+		ToSetBlankComponent->SetFlipbook(BlankFlipbook);
 	}
 }
 
