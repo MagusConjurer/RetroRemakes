@@ -20,6 +20,16 @@ void ASnakeGameModeBase::BeginPlay()
 
 	IsDead = false;
 	SelectRandomDirection();
+	SpawnSnakeHead();
+	SpawnFood();
+
+}
+
+void ASnakeGameModeBase::SpawnSnakeHead()
+{
+	SnakePartsArray.Empty();
+	FVector StartingLocation = FVector(0, 1, 0);
+	SpawnNewSnakePart(StartingLocation, true);
 }
 
 // Add a snake body part at the given location
@@ -58,14 +68,14 @@ void ASnakeGameModeBase::SpawnNewSnakePart(FVector SpawnLocation, bool IsHead)
 // Get a random location within the play area and spawn a FoodActor
 void ASnakeGameModeBase::SpawnFood()
 {
-	// Get a random point within the playable area
-	X_Max = (FMath::RandRange((X_Max * -1.f), X_Max) / 100.f) * 100.f;
-	Z_Max = (FMath::RandRange((X_Max * -1.f), X_Max) / 100.f) * 100.f;
+	// Get a random point within the playable area that is a multiple of 20 and add 10 to line it upo in the grid squares
+	X_Max = ((FMath::RandRange((X_Max * -1), X_Max) / 20) * 20) + 10;
+	Z_Max = ((FMath::RandRange((X_Max * -1), X_Max) / 20) * 20) + 10;
 
 	// Spawn a Food actor at the given location while ignoring collision
 	FActorSpawnParameters SpawnParams = FActorSpawnParameters();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	FVector SpawnLocation = FVector(X_Max, -1, Z_Max);
+	FVector SpawnLocation = FVector(X_Max, 1, Z_Max);
 	AActor* FoodActor = GetWorld()->SpawnActor(FoodActorClass, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
 }
 

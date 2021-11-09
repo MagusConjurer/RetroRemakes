@@ -23,6 +23,8 @@ public:
 	void UpdateScore(uint8 Value);
 
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
+	float UpdateDelay;
+	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
 	TSubclassOf<AActor> FoodActorClass;
 	UPROPERTY(EditAnywhere, Category = "Snake Game Mode");
 	TSubclassOf<AActor> SnakeBodyActorClass;
@@ -41,11 +43,12 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Snake Game Mode")
 	UUserWidget* GameHUDWidget;
-	UPROPERTY(EditAnywhere, Category = "Snake Game Mode")
-	float UpdateDelay;
+	
 protected:
 	virtual void BeginPlay() override;
 private:
+	UFUNCTION()
+	void SpawnSnakeHead();
 	UFUNCTION()
 	void SpawnNewSnakePart(FVector SpawnLocation, bool IsHead);
 	UFUNCTION()
@@ -57,6 +60,7 @@ private:
 	UFUNCTION()
 	void SetBlankFlipbook();
 	
+	
 	TArray<AActor*> SnakePartsArray;
 	UPaperFlipbookComponent* FlipbookComponent;
 	bool IsDead;
@@ -64,7 +68,7 @@ private:
 	uint8 Score = 0;
 	uint8 DirectionZ;
 	uint8 DirectionX;
-	float Z_Max = 300;
-	float X_Max = 300;
+	int32 Z_Max = 300;
+	int32 X_Max = 300;
 	
 };

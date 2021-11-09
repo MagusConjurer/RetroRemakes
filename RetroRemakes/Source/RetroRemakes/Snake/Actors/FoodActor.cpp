@@ -25,29 +25,30 @@ void AFoodActor::SetFood(EFoodColor FCEnum)
 	FoodSpriteComponent->SetSprite(FoodSprite);
 	FTimerHandle TimerHandle;
 	FTimerDelegate TimerDelegate;
+	
 	switch (FCEnum)
 	{
-	case EFoodColor::FC_Green:
-		FoodSpriteComponent->SetSpriteColor(FLinearColor(40.f, 60.f, 30.f));
-		Score = 10;
-		TimerDelegate.BindLambda([&] {SetFood(EFoodColor::FC_Yellow); });
-		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, 3.f, false);
-		break;
-	case EFoodColor::FC_Yellow:
-		FoodSpriteComponent->SetSpriteColor(FLinearColor(140.f, 140.f, 90.f));
-		Score = 20;
+	case EFoodColor::FC_Red:
+		FoodSpriteComponent->SetSpriteColor(FLinearColor(0.5f, 0.0f, 0.0f));
+		Score = 100;
 		TimerDelegate.BindLambda([&] {SetFood(EFoodColor::FC_Orange); });
-		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, 3.f, false);
+		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, FoodTimerDelay, false);
 		break;
 	case EFoodColor::FC_Orange:
-		FoodSpriteComponent->SetSpriteColor(FLinearColor(130.f, 85.f, 30.f));
+		FoodSpriteComponent->SetSpriteColor(FLinearColor(0.75f, 0.25f, 0.0f));
 		Score = 50;
-		TimerDelegate.BindLambda([&] {SetFood(EFoodColor::FC_Red); });
-		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, 3.f, false);
+		TimerDelegate.BindLambda([&] {SetFood(EFoodColor::FC_Yellow); });
+		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, FoodTimerDelay, false);
 		break;
-	case EFoodColor::FC_Red:
-		FoodSpriteComponent->SetSpriteColor(FLinearColor(130.f, 40.f, 30.f));
-		Score = 100;
+	case EFoodColor::FC_Yellow:
+		FoodSpriteComponent->SetSpriteColor(FLinearColor(1.0f, 1.0f, 0.0f));
+		Score = 20;
+		TimerDelegate.BindLambda([&] {SetFood(EFoodColor::FC_Green); });
+		GetWorldTimerManager().SetTimer(TimerHandle, TimerDelegate, FoodTimerDelay, false);
+		break;
+	case EFoodColor::FC_Green:
+		FoodSpriteComponent->SetSpriteColor(FLinearColor(0.0f, 0.35f, 0.0f));
+		Score = 10;
 		break;
 	}
 }

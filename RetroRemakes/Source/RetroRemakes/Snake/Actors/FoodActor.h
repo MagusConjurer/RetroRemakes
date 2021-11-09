@@ -9,10 +9,10 @@
 
 UENUM(BlueprintType)
 enum class EFoodColor : uint8 {
-	FC_Green UMETA(DisplayName = "Green"),
-	FC_Yellow UMETA(DisplayName = "Yellow"),
+	FC_Red UMETA(DisplayName = "Red"),
 	FC_Orange UMETA(DisplayName = "Orange"),
-	FC_Red UMETA(DisplayName = "Red")
+	FC_Yellow UMETA(DisplayName = "Yellow"),
+	FC_Green UMETA(DisplayName = "Green")
 };
 
 UCLASS()
@@ -24,6 +24,8 @@ public:
 	// Sets default values for this actor's properties
 	AFoodActor();
 
+	UPROPERTY(EditAnywhere)
+	float FoodTimerDelay = 3.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EFoodColor FoodColorEnum;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
