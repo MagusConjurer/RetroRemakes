@@ -1,51 +1,57 @@
+#include "RRWindow.h"
+
 #include <stdio.h>
 #include <stdexcept>
 #include <string.h>
 
-#include "RetroRemakeWindow.h"
-
 using std::runtime_error;
-using rrdata::Color;
+//using rrdata::Color;
+using glm::mat4;
+using glm::vec3;
+using glm::translate;
+using glm::rotate;
+using glm::scale;
+using glm::value_ptr;
 
 // Vertex Shader
-static const char* vs_source = "        \n\
-#version 330							\n\
-                                        \n\
-in vec3 pos;                            \n\
-in vec4 clr;                            \n\
-                                        \n\
-out vec4 vColor;                        \n\
-                                        \n\
-void main() {                           \n\
-    gl_Position = vec4(pos, 1.0);       \n\
-    vColor = clr;                       \n\
-}";
+static const char* vs_source = R"(            
+#version 330							    
+
+layout (location = 0) in vec3 pos;
+layout (location = 1) in vec4 clr;
+
+out vec4 vColor;
+
+uniform mat4 model;
+
+void main() {
+    gl_Position = model * vec4(pos.x, pos.y, pos.z, 1.0);
+    vColor = clr;
+})";
 
 // Fragment Shader
-static const char* fs_source = "        \n\
-#version 330							\n\
-                                        \n\
-precision mediump float;                \n\
-                                        \n\
-in vec4 vColor;                         \n\
-                                        \n\
-out vec4 fColor;                        \n\
-                                        \n\
-void main() {                           \n\
-    fColor = vColor;                    \n\
-}";
+static const char* fs_source = R"(
+#version 330
 
-RetroRemakeWindow::RetroRemakeWindow() {
+precision mediump float;
 
-}
+in vec4 vColor;
 
-void RetroRemakeWindow::run() {
-    initWindow();
+out vec4 fColor;
+
+void main() {
+    fColor = vec4(0.5, 0.5, 0.5, 1.0);
+})";
+
+RRWindow::RRWindow() {}
+
+void RRWindow::run() {
+	initWindow();
 	mainLoop();
 	cleanup();
 }
 
-void RetroRemakeWindow::initWindow() {
+void RRWindow::initWindow() {
     // Initialize GLFW and handle failure
     if (!glfwInit()) {
         glfwTerminate();
@@ -82,44 +88,18 @@ void RetroRemakeWindow::initWindow() {
     compileShaders();
 }
 
-void RetroRemakeWindow::mainLoop() {
-    // Loop until window closed
-    while (!glfwWindowShouldClose(mainWindow)) {
-        // Handle user input
-        glfwPollEvents();
-        drawFrame();
-    }
-}
-
-void RetroRemakeWindow::drawFrame() {
-    glClearColor(background.r, background.g, background.b, background.a);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glUseProgram(shaderProgram);
-
-    glBindVertexArray(VAO);
-
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    glBindVertexArray(0);
-
-    glUseProgram(0);
-
-    glfwSwapBuffers(mainWindow);
-}
-
-void RetroRemakeWindow::bindArrayData(GLfloat data[], GLuint VBO, GLuint numPerVertex) {
+void RRWindow::bindArrayData(GLfloat data[], GLuint VBO, GLuint numPerVertex, GLuint location) {
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
     glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
     // Start, num per, type, normalized, stride, offset
-    glVertexAttribPointer(0, numPerVertex, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(location, numPerVertex, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(location);
 }
 
-void RetroRemakeWindow::createTriangle() {
+void RRWindow::createTriangle() {
     GLfloat vertices[] = {
         -1.0f, -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f,
@@ -136,15 +116,15 @@ void RetroRemakeWindow::createTriangle() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    bindArrayData(vertices, pos_VBO, 3);
-    bindArrayData(colors, clr_VBO, 4);
+    bindArrayData(vertices, pos_VBO, 3, 0);
+    bindArrayData(colors, clr_VBO, 4, 1);
 
     // Unbind VBO(s) then VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
-void RetroRemakeWindow::addShader(GLuint program, const char* source, GLenum shaderType) {
+void RRWindow::addShader(GLuint program, const char* source, GLenum shaderType) {
     GLuint shader = glCreateShader(shaderType);
 
     const GLchar* code[1];
@@ -169,7 +149,7 @@ void RetroRemakeWindow::addShader(GLuint program, const char* source, GLenum sha
     glAttachShader(program, shader);
 }
 
-void RetroRemakeWindow::compileShaders() {
+void RRWindow::compileShaders() {
     shaderProgram = glCreateProgram();
 
     if (!shaderProgram) {
@@ -197,9 +177,54 @@ void RetroRemakeWindow::compileShaders() {
         printf("%s", errorLog);
         throw runtime_error("Failed to validate shader program! ( See log above )");
     }
+
+    uniformModel = glGetUniformLocation(shaderProgram, "model");
 }
 
-void RetroRemakeWindow::cleanup() {
+void RRWindow::updateModel() {
+    mat4 model{ 1.0f };
+    vec3 translation = vec3(0.0f, 0.0f, 0.0f);
+    model = translate(model, translation);
+    vec3 zAxis = vec3(0.0f, 0.0f, 1.0f);
+    model = rotate(model, currentAngle * TORADIANS, zAxis);
+    // model = scale(model, scale);
+
+    glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
+}
+
+void RRWindow::mainLoop() {
+    // Loop until window closed
+    while (!glfwWindowShouldClose(mainWindow)) {
+        // Handle user input
+        glfwPollEvents();
+
+        currentAngle += 0.001f;
+
+        drawFrame();
+    }
+}
+
+void RRWindow::drawFrame() {
+    //glClearColor(background.r, background.g, background.b, background.a);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(shaderProgram);
+
+    updateModel();
+
+    glBindVertexArray(VAO);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glBindVertexArray(0);
+
+    glUseProgram(0);
+
+    glfwSwapBuffers(mainWindow);
+}
+
+void RRWindow::cleanup() {
     glfwDestroyWindow(mainWindow);
     glfwTerminate();
 }

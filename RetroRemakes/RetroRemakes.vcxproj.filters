@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RemakeConsoleApp.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RetroRemakeWindow.cpp">
+    <ClCompile Include="RRWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RetroRemakeWindow.h">
+    <ClInclude Include="RRWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

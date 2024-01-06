@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{40d52f47-979d-4d2d-b3cc-a4eddb0d7cba}</ProjectGuid>
-    <RootNamespace>RemakeConsoleApp</RootNamespace>
+    <ProjectGuid>{94d647b3-63e0-4ab7-883c-6052251c9eed}</ProjectGuid>
+    <RootNamespace>RetroRemakes</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -76,10 +76,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)/../../External Libraries/GLEW/include;$(SolutionDir)/../../External Libraries/GLFW/include;$(SolutionDir)/../../External Libraries/GLM;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)/../../External Libraries/GLEW/lib/Release/Win32;$(SolutionDir)/../../External Libraries/GLFW/lib-vc2022</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -104,13 +107,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)/../../../External Libraries/GLEW/include;$(SolutionDir)/../../../External Libraries/GLFW/include;$(SolutionDir)/../../../External Libraries/VulkanSDK/Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)/../../External Libraries/GLEW/include;$(SolutionDir)/../../External Libraries/GLFW/include;$(SolutionDir)/../../External Libraries/GLM;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)/../../../External Libraries/GLEW/lib/Release/x64;$(SolutionDir)/../../../External Libraries/GLFW/lib-vc2022;$(SolutionDir)/../../../External Libraries/VulkanSDK/Lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)/../../External Libraries/GLEW/lib/Release/Win32;$(SolutionDir)/../../External Libraries/GLFW/lib-vc2022</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -131,13 +133,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="RemakeConsoleApp.cpp" />
-    <ClCompile Include="RetroRemakeWindow.cpp" />
-    <ClCompile Include="RRDataStructures.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="RRWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RetroRemakeWindow.h" />
-    <ClInclude Include="RRDataStructures.h" />
+    <ClInclude Include="RRWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
