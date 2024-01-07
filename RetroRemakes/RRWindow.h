@@ -7,6 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "RRDataStructures.h"
+
 class RRWindow {
 public:
 	RRWindow();
@@ -18,7 +20,7 @@ private:
 	int bufferWidth;
 	int bufferHeight;
 	GLFWwindow* mainWindow;
-	//rrdata::Color background{ 0.0f, 0.0f, 0.0f, 1.0f };
+	rrdata::Color background{ 0.0f, 0.0f, 0.0f, 1.0f };
 
 	// Shader details
 	GLuint VAO; // vertex array object
@@ -34,7 +36,6 @@ private:
 	// Functions
 	void initWindow();
 
-	void bindArrayData(GLfloat data[], GLuint VBO, GLuint numPerVertex, GLuint location);
 	void createTriangle();
 	void addShader(GLuint program, const char* source, GLenum shaderType);
 	void compileShaders();

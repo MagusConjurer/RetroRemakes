@@ -40,8 +40,9 @@ in vec4 vColor;
 out vec4 fColor;
 
 void main() {
-    fColor = vec4(0.5, 0.5, 0.5, 1.0);
+    fColor = vColor;
 })";
+
 
 RRWindow::RRWindow() {}
 
@@ -88,17 +89,6 @@ void RRWindow::initWindow() {
     compileShaders();
 }
 
-void RRWindow::bindArrayData(GLfloat data[], GLuint VBO, GLuint numPerVertex, GLuint location) {
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
-    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
-
-    // Start, num per, type, normalized, stride, offset
-    glVertexAttribPointer(location, numPerVertex, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(location);
-}
-
 void RRWindow::createTriangle() {
     GLfloat vertices[] = {
         -1.0f, -1.0f, 0.0f,
@@ -116,8 +106,28 @@ void RRWindow::createTriangle() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    bindArrayData(vertices, pos_VBO, 3, 0);
-    bindArrayData(colors, clr_VBO, 4, 1);
+    //bindArrayData(colors, clr_VBO, 4, 1);
+
+    // Bind vertices data
+    glGenBuffers(1, &pos_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, pos_VBO);
+    // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Start, num per, type, normalized, stride, offset
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    // Bind color data
+
+    glGenBuffers(1, &clr_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, clr_VBO);
+    // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
+    // Start, num per, type, normalized, stride, offset
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
 
     // Unbind VBO(s) then VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -198,15 +208,17 @@ void RRWindow::mainLoop() {
         // Handle user input
         glfwPollEvents();
 
-        currentAngle += 0.001f;
+        currentAngle += 0.01f;
+        if (currentAngle >= 360.0f) {
+            currentAngle -= 360.0f;
+        }
 
         drawFrame();
     }
 }
 
 void RRWindow::drawFrame() {
-    //glClearColor(background.r, background.g, background.b, background.a);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(background.r, background.g, background.b, background.a);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);

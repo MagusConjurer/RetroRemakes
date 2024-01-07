@@ -21,9 +21,15 @@
     <ClCompile Include="RRWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RRDataStructures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RRWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RRDataStructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
