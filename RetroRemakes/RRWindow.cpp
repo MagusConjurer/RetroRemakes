@@ -12,6 +12,7 @@ using glm::translate;
 using glm::rotate;
 using glm::scale;
 using glm::value_ptr;
+using glm::perspective;
 
 // Vertex Shader
 static const char* vs_source = R"(            
@@ -23,9 +24,10 @@ layout (location = 1) in vec4 clr;
 out vec4 vColor;
 
 uniform mat4 model;
+uniform mat4 projection;
 
 void main() {
-    gl_Position = model * vec4(pos.x, pos.y, pos.z, 1.0);
+    gl_Position = projection * model * vec4(pos, 1.0);
     vColor = clr;
 })";
 
@@ -83,6 +85,9 @@ void RRWindow::initWindow() {
         throw runtime_error("Failed to initialize GLEW!");
     }
 
+    // Enable depth buffer so correct triangles are drawn on top
+    glEnable(GL_DEPTH_TEST);
+
     glViewport(0, 0, bufferWidth, bufferHeight);
 
     createTriangle();
@@ -90,15 +95,29 @@ void RRWindow::initWindow() {
 }
 
 void RRWindow::createTriangle() {
+
+    uint32_t indices[] = {
+        0, 1, 2,
+        0, 1, 4,
+        1, 2, 4,
+        2, 3, 0,
+        2, 3, 4,
+        3, 0, 4
+    };
+
     GLfloat vertices[] = {
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f
+        -1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, -1.0f,
+        -1.0f, 0.0f, -1.0f,
+        0.0f, 1.0f, 0.0f,
     };
 
     GLfloat colors[] = {
         1.0f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.0f, 1.0f,
         0.0f, 1.0f, 0.0f, 1.0f,
+        0.0f, 0.5f, 0.5f, 1.0f,
         0.0f, 0.0f, 1.0f, 1.0f
     };
 
@@ -106,12 +125,15 @@ void RRWindow::createTriangle() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    //bindArrayData(colors, clr_VBO, 4, 1);
+    // Set up for indexed draws
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Bind vertices data
     glGenBuffers(1, &pos_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, pos_VBO);
-    // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
+    // TODO: GL_STATIC_DRAW means we won't be changing the values, may want to look into the dynamic option
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Start, num per, type, normalized, stride, offset
@@ -129,9 +151,10 @@ void RRWindow::createTriangle() {
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
-    // Unbind VBO(s) then VAO
+    // Unbind VBO(s), VAO, then IBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void RRWindow::addShader(GLuint program, const char* source, GLenum shaderType) {
@@ -189,17 +212,27 @@ void RRWindow::compileShaders() {
     }
 
     uniformModel = glGetUniformLocation(shaderProgram, "model");
+    uniformProjection = glGetUniformLocation(shaderProgram, "projection");
 }
 
 void RRWindow::updateModel() {
     mat4 model{ 1.0f };
-    vec3 translation = vec3(0.0f, 0.0f, 0.0f);
+    vec3 translation{ 0.0f, 0.0f, -2.5f };
     model = translate(model, translation);
+
+    vec3 yAxis = vec3(0.0f, 1.0f, 0.0f);
     vec3 zAxis = vec3(0.0f, 0.0f, 1.0f);
-    model = rotate(model, currentAngle * TORADIANS, zAxis);
-    // model = scale(model, scale);
+
+    vec3 axis = yAxis;
+    model = rotate(model, currentAngle * TORADIANS, axis);
+    vec3 scaling{ 0.5f, 0.5f, 0.5f };
+    model = scale(model, scaling);
+
+    mat4 projection{ 1.0f };
+    projection = perspective(45.0f, (GLfloat)bufferWidth / (GLfloat)bufferHeight, 0.1f, 100.0f);
 
     glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
+    glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, value_ptr(projection));
 }
 
 void RRWindow::mainLoop() {
@@ -208,7 +241,7 @@ void RRWindow::mainLoop() {
         // Handle user input
         glfwPollEvents();
 
-        currentAngle += 0.01f;
+        currentAngle += 0.1f;
         if (currentAngle >= 360.0f) {
             currentAngle -= 360.0f;
         }
@@ -219,18 +252,19 @@ void RRWindow::mainLoop() {
 
 void RRWindow::drawFrame() {
     glClearColor(background.r, background.g, background.b, background.a);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
 
     updateModel();
 
     glBindVertexArray(VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
 
     glBindVertexArray(0);
-
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glUseProgram(0);
 
     glfwSwapBuffers(mainWindow);

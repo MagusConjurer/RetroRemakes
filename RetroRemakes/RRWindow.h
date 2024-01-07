@@ -26,8 +26,11 @@ private:
 	GLuint VAO; // vertex array object
 	GLuint pos_VBO; // vertex buffer object
 	GLuint clr_VBO;
+	GLuint IBO; // index buffer object
 	GLuint shaderProgram;
 	GLint uniformModel;
+	GLint uniformView;
+	GLint uniformProjection;
 	const float TORADIANS = 3.14159265f / 180.0f;
 
 	// Angle in degrees
