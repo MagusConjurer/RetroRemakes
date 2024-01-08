@@ -1,20 +1,22 @@
 #pragma once
 
 #ifndef MESH
+#define MESH
+
 #include <GL\glew.h>
 
 class Mesh {
-public :
+public:
 	Mesh();
 
-	void createMesh(GLfloat* vertices,
+	void CreateMesh(GLfloat* vertices,
 					GLfloat* colors,
 					unsigned int* indices,
 					unsigned int numOfVertices,
 					unsigned int numOfColors,
 					unsigned int numOfIndices);
-	void renderMesh();
-	void clearMesh();
+	void RenderMesh();
+	void ClearMesh();
 
 	~Mesh();
 

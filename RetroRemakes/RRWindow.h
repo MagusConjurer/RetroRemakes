@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef RRWINDOW
+#define RRWINDOW
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -9,19 +12,19 @@
 
 #include <vector>
 
-#include "RRDataStructures.h"
 #include "Object.h"
+#include "RRDataStructures.h"
 #include "Shader.h"
 
 class RRWindow {
 public:
 	RRWindow();
 	RRWindow(GLint windowWidth, GLint windowHeight);
-	void initWindow();
-	GLfloat getBufferWidth();
-	GLfloat getBufferHeight();
-	bool getShouldClose();
-	void swapBuffers();
+	void InitWindow();
+	GLfloat GetBufferWidth();
+	GLfloat GetBufferHeight();
+	bool GetShouldClose();
+	void SwapBuffers();
 	~RRWindow();
 private:
 	// GLFW window details
@@ -31,6 +34,7 @@ private:
 	int bufferHeight;
 	GLFWwindow* mainWindow;
 
-	void cleanup();
+	void Cleanup();
 };
 
+#endif
