@@ -24,6 +24,9 @@ public:
 	GLfloat GetBufferWidth();
 	GLfloat GetBufferHeight();
 	bool GetShouldClose();
+	bool* GetStateOfKeys();
+	GLfloat GetMouseXChange();
+	GLfloat GetMouseYChange(); 
 	void SwapBuffers();
 	~RRWindow();
 private:
@@ -34,6 +37,23 @@ private:
 	int bufferHeight;
 	GLFWwindow* mainWindow;
 
+	// Input
+	bool keys[1024];
+	GLfloat mouseXLast;
+	GLfloat mouseYLast;
+	GLfloat mouseXChange;
+	GLfloat mouseYChange;
+	bool mouseFirstMove;
+	bool shouldInvertMouse = false;
+	
+
+	void InitialSetup(GLint windowWidth, GLint windowHeight);
+	static void HandleKeys(GLFWwindow* window, int key, int code, int action, int mode);
+	static void HandleMouse(GLFWwindow* window, double xPosition, double yPosition);
+	/// <summary>
+	/// Setup callbacks for key and mouse input from GLFW
+	/// </summary>
+	void CreateCallbacks();
 	void Cleanup();
 };
 

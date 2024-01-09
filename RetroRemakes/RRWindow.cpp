@@ -7,14 +7,27 @@
 using std::runtime_error;
 
 RRWindow::RRWindow() {
-	width = 1080;
-	height = 720;
+	InitialSetup(1080, 720);
 }
 
 RRWindow::RRWindow(GLint windowWidth, GLint windowHeight) {
+	InitialSetup(windowWidth, windowHeight);
+}
+
+void RRWindow::InitialSetup(int windowWidth, int windowHeight) {
 	width = windowWidth;
 	height = windowHeight;
+
+	mouseXLast = 0.0f;
+	mouseYLast = 0.0f;
+	mouseXChange = 0.0f;
+	mouseYChange = 0.0f;
+
+	for (size_t i = 0; i < 1024; i++) {
+		keys[i] = false;
+	}
 }
+
 
 GLfloat RRWindow::GetBufferWidth() {
 	return bufferWidth;
@@ -28,8 +41,67 @@ bool RRWindow::GetShouldClose() {
 	return glfwWindowShouldClose(mainWindow);
 }
 
+bool* RRWindow::GetStateOfKeys() {
+	return keys;
+}
+
+GLfloat RRWindow::GetMouseXChange() {
+	GLfloat currentChange = mouseXChange;
+	mouseXChange = 0.0f;
+	return currentChange;
+}
+
+GLfloat RRWindow::GetMouseYChange() {
+	GLfloat currentChange = mouseYChange;
+	mouseYChange = 0.0f;
+	return currentChange;
+}
+
 void RRWindow::SwapBuffers() {
 	glfwSwapBuffers(mainWindow);
+}
+
+void RRWindow::HandleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
+	RRWindow* thisWindow = static_cast<RRWindow*>(glfwGetWindowUserPointer(window));
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+
+	// Is a valid key?
+	if (key >= 0 && key < 1024) {
+		if (action == GLFW_PRESS) {
+			thisWindow->keys[key] = true;
+		} else if (action == GLFW_RELEASE) {
+			thisWindow->keys[key] = false;
+		}
+	}
+}
+
+void RRWindow::CreateCallbacks() {
+	glfwSetKeyCallback(mainWindow, HandleKeys);
+	glfwSetCursorPosCallback(mainWindow, HandleMouse);
+}
+
+void RRWindow::HandleMouse(GLFWwindow* window, double xPosition, double yPosition) {
+	RRWindow* thisWindow = static_cast<RRWindow*>(glfwGetWindowUserPointer(window));
+
+	if (thisWindow->mouseFirstMove) {
+		thisWindow->mouseXLast = xPosition;
+		thisWindow->mouseYLast = yPosition;
+		thisWindow->mouseFirstMove = false;
+	}
+
+	thisWindow->mouseXChange = xPosition - thisWindow->mouseXLast;
+	
+	if (thisWindow->shouldInvertMouse) {
+		thisWindow->mouseYChange = yPosition - thisWindow->mouseYLast;
+	} else {
+		thisWindow->mouseYChange = thisWindow->mouseYLast - yPosition;
+	}
+
+	thisWindow->mouseXLast = xPosition;
+	thisWindow->mouseYLast = yPosition;
 }
 
 void RRWindow::InitWindow() {
@@ -53,6 +125,9 @@ void RRWindow::InitWindow() {
 	// Buffer size info
 	glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
 
+	CreateCallbacks();
+	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// Context for GLEW
 	glfwMakeContextCurrent(mainWindow);
 	// Allow modern extensions
@@ -67,6 +142,8 @@ void RRWindow::InitWindow() {
 	glEnable(GL_DEPTH_TEST);
 
 	glViewport(0, 0, bufferWidth, bufferHeight);
+
+	glfwSetWindowUserPointer(mainWindow, this);
 }
 
 void RRWindow::Cleanup() {
@@ -77,3 +154,4 @@ void RRWindow::Cleanup() {
 RRWindow::~RRWindow() {
 	Cleanup();
 }
+
