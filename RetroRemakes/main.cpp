@@ -5,6 +5,7 @@
 
 #include "RRDataStructures.h"
 #include "RRWindow.h"
+#include "Camera.h"
 
 using rrdata::Color;
 
@@ -28,6 +29,11 @@ static const char* fs_source = "Shaders/fragment.shader";
 RRWindow window;
 std::vector<Object*> objects;
 std::vector<Shader*> shaders;
+Camera camera;
+
+// Very basic implementation
+GLfloat deltaTime = 0.0f;
+GLfloat lastTime = 0.0f;
 
 const float TORADIANS = 3.14159265f / 180.0f;
 
@@ -94,9 +100,11 @@ void UpdateMVP() {
 		45.0f, window.GetBufferWidth() / window.GetBufferHeight(), 0.1f, 100.0f);
 
 	GLuint uniformModel = shaders[0]->GetModelLocation();
+	GLuint uniformView = shaders[0]->GetViewLocation();
 	GLuint uniformProjection = shaders[0]->GetProjectionLocation();
 
 	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
+	glUniformMatrix4fv(uniformView, 1, GL_FALSE, value_ptr(camera.calculateViewMatrix()));
 	glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, value_ptr(projection));
 }
 
@@ -129,10 +137,20 @@ int main() {
 		CreateObjects();
 		CreateShaders();
 
+		camera = Camera(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
+
 		// Loop until window closed
 		while (!window.GetShouldClose()) {
+			// Basic delta time
+			GLfloat now = glfwGetTime();
+			deltaTime = now - lastTime;
+			lastTime = now;
+
 			// Handle user input
 			glfwPollEvents();
+
+			camera.keyControl(deltaTime, window.GetStateOfKeys());
+			camera.mouseControl(window.GetMouseXChange(), window.GetMouseYChange());
 
 			currentAngle += 0.1f;
 			if (currentAngle >= 360.0f) {
