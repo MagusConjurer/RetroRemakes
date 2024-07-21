@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <stdio.h>
 
 #include <iostream>
@@ -6,6 +8,7 @@
 #include "RRDataStructures.h"
 #include "RRWindow.h"
 #include "Camera.h"
+#include "Texture.h"
 
 using rrdata::Color;
 
@@ -31,6 +34,8 @@ std::vector<Object*> objects;
 std::vector<Shader*> shaders;
 Camera camera;
 
+Texture leavesTexture;
+
 // Very basic implementation
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
@@ -54,11 +59,12 @@ void CreateObjects() {
 	};
 
 	GLfloat vertices[] = {
-		-1.0f, 0.0f,  1.0f,
-		1.0f,  0.0f, 1.0f,
-		1.0f, 0.0f, -1.0f,
-		-1.0f, 0.0f, -1.0f,
-		0.0f, 1.0f, 0.0f
+	//  x      y      z     u     v
+		-1.0f, 0.0f,  1.0f, 0.25f, 0.25f,
+		1.0f,  0.0f, 1.0f,	0.75f,  0.25f,
+		1.0f, 0.0f, -1.0f,	0.75f, 0.75f,
+		-1.0f, 0.0f, -1.0f, 0.25f, 0.75f,
+		0.0f, 1.0f, 0.0f,	0.5f, 0.5f
 	};
 
 	GLfloat colors[] = {
@@ -71,7 +77,7 @@ void CreateObjects() {
 
 	Object* pyramid = new Object();
 	Mesh* pyramidMesh = new Mesh();
-	pyramidMesh->CreateMesh(vertices, colors, indices, 15, 20, 18);
+	pyramidMesh->CreateMesh(vertices, colors, indices, 25, 20, 18);
 	pyramid->SetMesh(pyramidMesh);
 	objects.push_back(pyramid);
 }
@@ -119,6 +125,8 @@ void DrawFrame() {
 
 	UpdateMVP();
 
+	leavesTexture.UseTexture();
+
 	for (Object* obj : objects) {
 		obj->Update();
 	}
@@ -138,6 +146,9 @@ int main() {
 		CreateShaders();
 
 		camera = Camera(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
+
+		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
+		leavesTexture.LoadTexture();
 
 		// Loop until window closed
 		while (!window.GetShouldClose()) {

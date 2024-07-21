@@ -31,20 +31,23 @@ void Mesh::CreateMesh(GLfloat* vertices,
 	// TODO: GL_STATIC_DRAW means we won't be changing the values, may want to look into the dynamic option
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * numOfVertices, vertices, GL_STATIC_DRAW);
 
-	// Start, num per, type, normalized, stride, offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	// Position coordinates X,Y,Z
+	// Location, num per, type, normalized, stride, offset
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, 0);
 	glEnableVertexAttribArray(0);
+	// Texture coordinates U,V
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, (void*)(sizeof(vertices[0]) * 3));
+	glEnableVertexAttribArray(1);
 
 	// Bind color data
-
 	glGenBuffers(1, &clr_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, clr_VBO);
-	// TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
+	 // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colors[0]) * numOfColors, colors, GL_STATIC_DRAW);
 
-	// Start, num per, type, normalized, stride, offset
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
+	// Location, num per, type, normalized, stride, offset
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
 
 	// Unbind VBO(s), VAO, then IBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
