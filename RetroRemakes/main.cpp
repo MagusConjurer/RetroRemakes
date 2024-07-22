@@ -9,6 +9,7 @@
 #include "RRWindow.h"
 #include "Camera.h"
 #include "Texture.h"
+#include "Light.h"
 
 using rrdata::Color;
 
@@ -35,6 +36,8 @@ std::vector<Shader*> shaders;
 Camera camera;
 
 Texture leavesTexture;
+
+Light mainLight;
 
 // Very basic implementation
 GLfloat deltaTime = 0.0f;
@@ -108,6 +111,10 @@ void UpdateMVP() {
 	GLuint uniformModel = shaders[0]->GetModelLocation();
 	GLuint uniformView = shaders[0]->GetViewLocation();
 	GLuint uniformProjection = shaders[0]->GetProjectionLocation();
+	GLuint uniformAmbientIntensity = shaders[0]->GetAmbientIntensityLocation();
+	GLuint uniformAmbientColor = shaders[0]->GetAmbientColorLocation();
+
+	mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor);
 
 	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
 	glUniformMatrix4fv(uniformView, 1, GL_FALSE, value_ptr(camera.calculateViewMatrix()));
@@ -149,6 +156,8 @@ int main() {
 
 		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
 		leavesTexture.LoadTexture();
+
+		mainLight = Light(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Loop until window closed
 		while (!window.GetShouldClose()) {
