@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Texture.h"
 #include "Light.h"
+#include "Material.h"
 
 using rrdata::Color;
 
@@ -38,6 +39,7 @@ std::vector<Shader*> shaders;
 Camera camera;
 
 Texture leavesTexture;
+Material shinyMaterial;
 
 Light mainLight;
 
@@ -158,12 +160,6 @@ void UpdateMVP() {
 	GLuint uniformModel = shaders[0]->GetModelLocation();
 	GLuint uniformView = shaders[0]->GetViewLocation();
 	GLuint uniformProjection = shaders[0]->GetProjectionLocation();
-	GLuint uniformAmbientIntensity = shaders[0]->GetAmbientIntensityLocation();
-	GLuint uniformAmbientColor = shaders[0]->GetAmbientColorLocation();
-	GLuint uniformDiffuseIntensity = shaders[0]->GetDiffuseIntensityLocation();
-	GLuint uniformDirection = shaders[0]->GetDirectionLocation();
-
-	mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, uniformDiffuseIntensity, uniformDirection);
 
 	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
 	glUniformMatrix4fv(uniformView, 1, GL_FALSE, value_ptr(camera.calculateViewMatrix()));
@@ -181,7 +177,22 @@ void DrawFrame() {
 
 	UpdateMVP();
 
+	GLuint uniformAmbientIntensity = shaders[0]->GetAmbientIntensityLocation();
+	GLuint uniformAmbientColor = shaders[0]->GetAmbientColorLocation();
+	GLuint uniformDiffuseIntensity = shaders[0]->GetDiffuseIntensityLocation();
+	GLuint uniformDirection = shaders[0]->GetDirectionLocation();
+	GLuint uniformEyePosition = shaders[0]->GetEyePositionLocation();
+	GLuint uniformSpecularIntensity = shaders[0]->GetSpecularIntensityLocation();
+	GLuint uniformShininess = shaders[0]->GetShininessLocation();
+
+	vec3 eyePos = camera.getCameraPosition();
+	glUniform3f(uniformEyePosition, eyePos.x, eyePos.y, eyePos.z);
+
+	mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, uniformDiffuseIntensity, uniformDirection);
+
+	// TODO: Move into object update so that they can have unique textures
 	leavesTexture.UseTexture();
+	shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
 
 	for (Object* obj : objects) {
 		obj->Update();
@@ -205,6 +216,8 @@ int main() {
 
 		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
 		leavesTexture.LoadTexture();
+
+		shinyMaterial = Material(1.0f, 32.0f);
 
 		mainLight = Light(1.0f, 1.0f, 1.0f, 0.2f, 
 						  2.0f, -1.0f, 2.0f, 1.0f);
