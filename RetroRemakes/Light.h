@@ -9,20 +9,20 @@
 class Light {
 public:
 	Light();
-	Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat intensity);
+	Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity,
+		  GLfloat xDir, GLfloat yDir, GLfloat zDir, GLfloat dIntensity);
 
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="ambientIntensityLocation">Shader location for the intensity</param>
-	/// <param name="ambientColorLocation">Shader location for the color</param>
-	void UseLight(GLfloat ambientIntensityLocation, GLfloat ambientColorLocation);
+	void UseLight(GLfloat ambientIntensityLocation, GLfloat colorLocation,
+				  GLfloat diffuseIntensityLocation, GLfloat directionLocation);
 
 	~Light();
 
 private:
 	glm::vec3 color;
 	GLfloat ambientIntensity;
+
+	glm::vec3 direction;
+	GLfloat diffuseIntensity;
 };
 
 #endif

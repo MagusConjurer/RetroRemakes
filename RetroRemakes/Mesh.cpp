@@ -33,11 +33,14 @@ void Mesh::CreateMesh(GLfloat* vertices,
 
 	// Position coordinates X,Y,Z
 	// Location, num per, type, normalized, stride, offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, 0);
 	glEnableVertexAttribArray(0);
 	// Texture coordinates U,V
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, (void*)(sizeof(vertices[0]) * 3));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, (void*)(sizeof(vertices[0]) * 3));
 	glEnableVertexAttribArray(1);
+	// Normals data
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 8, (void*)(sizeof(vertices[0]) * 5));
+	glEnableVertexAttribArray(3);
 
 	// Bind color data
 	glGenBuffers(1, &clr_VBO);
@@ -45,7 +48,7 @@ void Mesh::CreateMesh(GLfloat* vertices,
 	 // TODO: GL_STATIC_DRAW means we won't be changing the values, look into the dynamic option
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colors[0]) * numOfColors, colors, GL_STATIC_DRAW);
 
-	// Location, num per, type, normalized, stride, offset
+	// Color data
 	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(2);
 

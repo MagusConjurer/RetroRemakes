@@ -20,6 +20,8 @@ using glm::scale;
 using glm::translate;
 using glm::value_ptr;
 using glm::vec3;
+using glm::cross;
+using glm::normalize;
 using std::cerr;
 using std::endl;
 using std::exception;
@@ -50,6 +52,49 @@ float currentAngle = 0.0f;
 
 Color defaultBackground = { 0.0f, 0.0f, 0.0f, 1.0f };
 
+void calcAverageNormals(unsigned int* indices, unsigned int indiceCount, 
+						GLfloat* vertices, unsigned int verticeCount,
+						unsigned int vLength, unsigned int normalOffset) {
+	for (size_t i = 0; i < indiceCount; i += 3) {
+		// Calculate index of each value from indices in the vertices
+		unsigned int in0 = indices[i] * vLength;
+		unsigned int in1 = indices[i + 1] * vLength;
+		unsigned int in2 = indices[i + 2] * vLength;
+
+		//      x							   y									  z
+		vec3 v1(vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
+		vec3 v2(vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
+		// Use cross product to get perpendicular vector to the two
+		vec3 normal = cross(v1, v2);
+		normal = normalize(normal);
+
+		in0 += normalOffset;
+		in1 += normalOffset;
+		in2 += normalOffset;
+
+		vertices[in0] += normal.x;
+		vertices[in0 + 1] += normal.y;
+		vertices[in0 + 2] += normal.z;
+
+		vertices[in1] += normal.x;
+		vertices[in1 + 1] += normal.y;
+		vertices[in1 + 2] += normal.z;
+
+		vertices[in2] += normal.x;
+		vertices[in2 + 1] += normal.y;
+		vertices[in2 + 2] += normal.z;
+	}
+
+	for (size_t j = 0; j < verticeCount / vLength; j++) {
+		unsigned int offset = j * vLength + normalOffset;
+		vec3 vec(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
+		vec = normalize(vec);
+		vertices[offset] = vec.x;
+		vertices[offset + 1] = vec.y;
+		vertices[offset + 2] = vec.z;
+	}
+}
+
 void CreateObjects() {
 	// Create pyramid
 	uint32_t indices[] = {
@@ -62,12 +107,12 @@ void CreateObjects() {
 	};
 
 	GLfloat vertices[] = {
-	//  x      y      z     u     v
-		-1.0f, 0.0f,  1.0f, 0.25f, 0.25f,
-		1.0f,  0.0f, 1.0f,	0.75f,  0.25f,
-		1.0f, 0.0f, -1.0f,	0.75f, 0.75f,
-		-1.0f, 0.0f, -1.0f, 0.25f, 0.75f,
-		0.0f, 1.0f, 0.0f,	0.5f, 0.5f
+	//  x      y      z     u     v			normals placeholder
+		-1.0f, 0.0f,  1.0f, 0.25f, 0.25f,	0.0f, 0.0f, 0.0f,
+		1.0f,  0.0f, 1.0f,	0.75f,  0.25f,	0.0f, 0.0f, 0.0f,
+		1.0f, 0.0f, -1.0f,	0.75f, 0.75f,	0.0f, 0.0f, 0.0f,
+		-1.0f, 0.0f, -1.0f, 0.25f, 0.75f,	0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,	0.5f, 0.5f,		0.0f, 0.0f, 0.0f
 	};
 
 	GLfloat colors[] = {
@@ -78,9 +123,11 @@ void CreateObjects() {
 		0.0f, 0.0f, 1.0f, 1.0f
 	};
 
+	calcAverageNormals(indices, 18, vertices, 40, 8, 5);
+
 	Object* pyramid = new Object();
 	Mesh* pyramidMesh = new Mesh();
-	pyramidMesh->CreateMesh(vertices, colors, indices, 25, 20, 18);
+	pyramidMesh->CreateMesh(vertices, colors, indices, 40, 20, 18);
 	pyramid->SetMesh(pyramidMesh);
 	objects.push_back(pyramid);
 }
@@ -113,8 +160,10 @@ void UpdateMVP() {
 	GLuint uniformProjection = shaders[0]->GetProjectionLocation();
 	GLuint uniformAmbientIntensity = shaders[0]->GetAmbientIntensityLocation();
 	GLuint uniformAmbientColor = shaders[0]->GetAmbientColorLocation();
+	GLuint uniformDiffuseIntensity = shaders[0]->GetDiffuseIntensityLocation();
+	GLuint uniformDirection = shaders[0]->GetDirectionLocation();
 
-	mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor);
+	mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, uniformDiffuseIntensity, uniformDirection);
 
 	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
 	glUniformMatrix4fv(uniformView, 1, GL_FALSE, value_ptr(camera.calculateViewMatrix()));
@@ -157,7 +206,8 @@ int main() {
 		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
 		leavesTexture.LoadTexture();
 
-		mainLight = Light(1.0f, 1.0f, 1.0f, 1.0f);
+		mainLight = Light(1.0f, 1.0f, 1.0f, 0.2f, 
+						  2.0f, -1.0f, 2.0f, 1.0f);
 
 		// Loop until window closed
 		while (!window.GetShouldClose()) {
