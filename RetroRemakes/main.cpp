@@ -5,11 +5,13 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "CommonValues.h"
 #include "RRDataStructures.h"
 #include "RRWindow.h"
 #include "Camera.h"
 #include "Texture.h"
-#include "Light.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
 #include "Material.h"
 
 using rrdata::Color;
@@ -39,9 +41,12 @@ std::vector<Shader*> shaders;
 Camera camera;
 
 Texture leavesTexture;
+Texture defaultTexture;
 Material shinyMaterial;
 
-Light mainLight;
+DirectionalLight mainLight;
+PointLight pointLights[MAX_POINT_LIGHTS];
+unsigned int pointLightCount = 0;
 
 // Very basic implementation
 GLfloat deltaTime = 0.0f;
@@ -132,6 +137,31 @@ void CreateObjects() {
 	pyramidMesh->CreateMesh(vertices, colors, indices, 40, 20, 18);
 	pyramid->SetMesh(pyramidMesh);
 	objects.push_back(pyramid);
+
+	uint32_t floorIndices[] = {
+		0, 2, 1,
+		1, 2, 3
+	};
+
+	GLfloat floorVertices[] = {
+		-10.0f, 0.0f, -10.0f,	0.0f, 0.0f,		0.0f, -1.0f, 0.0f,
+		10.0f, 0.0f, -10.0f,	10.0f, 0.0f,	0.0f, -1.0f, 0.0f,
+		-10.0f, 0.0f, 10.0f,	0.0f, 10.0f,	0.0f, -1.0f, 0.0f,
+		10.0f, 0.0f, 10.0f,		10.0f, 10.0f,	0.0f, -1.0f, 0.0f
+	};
+
+	GLfloat floorColors[] = {
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f
+	};
+
+	Object* floor = new Object();
+	Mesh* floorMesh = new Mesh();
+	floorMesh->CreateMesh(floorVertices, floorColors, floorIndices, 32, 16, 6);
+	floor->SetMesh(floorMesh);
+	objects.push_back(floor);
 }
 
 void CreateShaders() {
@@ -149,7 +179,7 @@ void UpdateMVP() {
 	vec3 zAxis = vec3(0.0f, 0.0f, 1.0f);
 
 	vec3 axis = yAxis;
-	model = rotate(model, currentAngle * TORADIANS, axis);
+	//model = rotate(model, currentAngle * TORADIANS, axis);
 	vec3 scaling{ 0.5f, 0.5f, 0.5f };
 	model = scale(model, scaling);
 
@@ -177,10 +207,6 @@ void DrawFrame() {
 
 	UpdateMVP();
 
-	GLuint uniformAmbientIntensity = shaders[0]->GetAmbientIntensityLocation();
-	GLuint uniformAmbientColor = shaders[0]->GetAmbientColorLocation();
-	GLuint uniformDiffuseIntensity = shaders[0]->GetDiffuseIntensityLocation();
-	GLuint uniformDirection = shaders[0]->GetDirectionLocation();
 	GLuint uniformEyePosition = shaders[0]->GetEyePositionLocation();
 	GLuint uniformSpecularIntensity = shaders[0]->GetSpecularIntensityLocation();
 	GLuint uniformShininess = shaders[0]->GetShininessLocation();
@@ -188,10 +214,12 @@ void DrawFrame() {
 	vec3 eyePos = camera.getCameraPosition();
 	glUniform3f(uniformEyePosition, eyePos.x, eyePos.y, eyePos.z);
 
-	mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, uniformDiffuseIntensity, uniformDirection);
+	shaders[0]->SetDirectionalLight(&mainLight);
+	shaders[0]->SetPointLights(pointLights, pointLightCount);
 
 	// TODO: Move into object update so that they can have unique textures
-	leavesTexture.UseTexture();
+	//leavesTexture.UseTexture();
+	defaultTexture.UseTexture();
 	shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
 
 	for (Object* obj : objects) {
@@ -217,10 +245,23 @@ int main() {
 		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
 		leavesTexture.LoadTexture();
 
+		defaultTexture = Texture((char*)("Textures/default.png"));
+		defaultTexture.LoadTexture();
+
 		shinyMaterial = Material(1.0f, 32.0f);
 
-		mainLight = Light(1.0f, 1.0f, 1.0f, 0.2f, 
-						  2.0f, -1.0f, 2.0f, 1.0f);
+		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.2f, 0.2f,
+									 2.0f, -1.0f, 2.0f);
+		
+		pointLightCount = 0;
+
+		pointLights[0] = PointLight(1.0, 0.0, 0.0f, 1.0f, 1.0f,
+									-4.0f, 0.0f, 0.0f, 3.0f, 0.2f, 0.1f);
+		pointLightCount++;
+
+		pointLights[1] = PointLight(0.0, 1.0, 0.0f, 1.0f, 1.0f,
+									4.0f, 0.0f, 0.0f, 3.0f, 0.2f, 0.1f);
+		pointLightCount++;
 
 		// Loop until window closed
 		while (!window.GetShouldClose()) {
