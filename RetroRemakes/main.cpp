@@ -12,6 +12,7 @@
 #include "Texture.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 #include "Material.h"
 
 using rrdata::Color;
@@ -47,6 +48,8 @@ Material shinyMaterial;
 DirectionalLight mainLight;
 PointLight pointLights[MAX_POINT_LIGHTS];
 unsigned int pointLightCount = 0;
+SpotLight spotLights[MAX_SPOT_LIGHTS];
+unsigned int spotLightCount = 0;
 
 // Very basic implementation
 GLfloat deltaTime = 0.0f;
@@ -214,8 +217,13 @@ void DrawFrame() {
 	vec3 eyePos = camera.getCameraPosition();
 	glUniform3f(uniformEyePosition, eyePos.x, eyePos.y, eyePos.z);
 
+	vec3 flashlightPos = camera.getCameraPosition();
+	flashlightPos.y -= 0.3f;
+	spotLights[0].Follow(flashlightPos, camera.getCameraDirection());
+
 	shaders[0]->SetDirectionalLight(&mainLight);
 	shaders[0]->SetPointLights(pointLights, pointLightCount);
+	shaders[0]->SetSpotLights(spotLights, spotLightCount);
 
 	// TODO: Move into object update so that they can have unique textures
 	//leavesTexture.UseTexture();
@@ -250,7 +258,7 @@ int main() {
 
 		shinyMaterial = Material(1.0f, 32.0f);
 
-		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.2f, 0.2f,
+		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.1f, 0.0f,
 									 2.0f, -1.0f, 2.0f);
 		
 		pointLightCount = 0;
@@ -262,6 +270,12 @@ int main() {
 		pointLights[1] = PointLight(0.0, 1.0, 0.0f, 1.0f, 1.0f,
 									4.0f, 0.0f, 0.0f, 3.0f, 0.2f, 0.1f);
 		pointLightCount++;
+
+		spotLightCount = 0;
+		spotLights[0] = SpotLight(1.0, 1.0, 1.0f, 1.0f, 1.0f,
+								  0.0f, 1.0f, -2.0f, 0.0f, -1.0f, 0.0f,
+								  3.0f, 0.0f, 0.0f, 20.0f);
+		spotLightCount++;
 
 		// Loop until window closed
 		while (!window.GetShouldClose()) {

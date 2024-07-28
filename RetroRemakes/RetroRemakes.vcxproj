@@ -144,6 +144,7 @@
     <ClCompile Include="RRDataStructures.cpp" />
     <ClCompile Include="RRWindow.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +159,7 @@
     <ClInclude Include="RRDataStructures.h" />
     <ClInclude Include="RRWindow.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
