@@ -14,6 +14,7 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "Material.h"
+#include "Model.h"
 
 using rrdata::Color;
 
@@ -44,6 +45,8 @@ Camera camera;
 Texture leavesTexture;
 Texture defaultTexture;
 Material shinyMaterial;
+
+Model catModel;
 
 DirectionalLight mainLight;
 PointLight pointLights[MAX_POINT_LIGHTS];
@@ -174,6 +177,7 @@ void CreateShaders() {
 }
 
 void UpdateMVP() {
+	// TODO: Move translating, scaling, rotation into Object
 	mat4 model{ 1.0f };
 	vec3 translation{ 0.0f, 0.0f, -2.5f };
 	model = translate(model, translation);
@@ -234,6 +238,8 @@ void DrawFrame() {
 		obj->Update();
 	}
 
+	catModel.RenderModel();
+
 	glUseProgram(0);
 
 	window.SwapBuffers();
@@ -251,12 +257,15 @@ int main() {
 		camera = Camera(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
 
 		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
-		leavesTexture.LoadTexture();
+		leavesTexture.LoadTextureRGBA();
 
 		defaultTexture = Texture((char*)("Textures/default.png"));
-		defaultTexture.LoadTexture();
+		defaultTexture.LoadTextureRGBA();
 
 		shinyMaterial = Material(1.0f, 32.0f);
+
+		catModel = Model();
+		catModel.LoadModel("Models/12221_Cat_v1_l3.obj");
 
 		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.1f, 0.0f,
 									 2.0f, -1.0f, 2.0f);

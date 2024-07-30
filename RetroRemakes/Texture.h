@@ -9,9 +9,10 @@
 class Texture {
 public:
 	Texture();
-	Texture(char* fileLoc);
+	Texture(const char* fileLoc);
 
-	void LoadTexture();
+	bool LoadTextureRGB();
+	bool LoadTextureRGBA();
 	void UseTexture();
 	void ClearTexture();
 
@@ -23,7 +24,7 @@ private:
 	int height;
 	int bitDepth;
 
-	char* fileLocation;
+	const char* fileLocation;
 };
 
 #endif
