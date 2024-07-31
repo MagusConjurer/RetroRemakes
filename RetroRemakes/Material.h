@@ -4,7 +4,6 @@
 
 #ifndef MATERIAL
 #define MATERIAL
-
 class Material {
 public:
 	Material();

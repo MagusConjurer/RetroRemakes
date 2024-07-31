@@ -58,8 +58,6 @@ unsigned int spotLightCount = 0;
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
 
-const float TORADIANS = 3.14159265f / 180.0f;
-
 // Angle in degrees
 float currentAngle = 0.0f;
 
@@ -109,65 +107,41 @@ void calcAverageNormals(unsigned int* indices, unsigned int indiceCount,
 }
 
 void CreateObjects() {
-	// Create pyramid
-	uint32_t indices[] = {
-		0, 1, 2,
-		0, 1, 4,
-		1, 2, 4,
-		2, 3, 0,
-		2, 3, 4,
-		3, 0, 4
-	};
+	//// Create pyramid
+	//uint32_t indices[] = {
+	//	0, 1, 2,
+	//	0, 1, 4,
+	//	1, 2, 4,
+	//	2, 3, 0,
+	//	2, 3, 4,
+	//	3, 0, 4
+	//};
 
-	GLfloat vertices[] = {
-	//  x      y      z     u     v			normals placeholder
-		-1.0f, 0.0f,  1.0f, 0.25f, 0.25f,	0.0f, 0.0f, 0.0f,
-		1.0f,  0.0f, 1.0f,	0.75f,  0.25f,	0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, -1.0f,	0.75f, 0.75f,	0.0f, 0.0f, 0.0f,
-		-1.0f, 0.0f, -1.0f, 0.25f, 0.75f,	0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,	0.5f, 0.5f,		0.0f, 0.0f, 0.0f
-	};
+	//GLfloat vertices[] = {
+	////  x      y      z     u     v			normals placeholder
+	//	-1.0f, 0.0f,  1.0f, 0.25f, 0.25f,	0.0f, 0.0f, 0.0f,
+	//	1.0f,  0.0f, 1.0f,	0.75f,  0.25f,	0.0f, 0.0f, 0.0f,
+	//	1.0f, 0.0f, -1.0f,	0.75f, 0.75f,	0.0f, 0.0f, 0.0f,
+	//	-1.0f, 0.0f, -1.0f, 0.25f, 0.75f,	0.0f, 0.0f, 0.0f,
+	//	0.0f, 1.0f, 0.0f,	0.5f, 0.5f,		0.0f, 0.0f, 0.0f
+	//};
 
-	GLfloat colors[] = {
-		1.0f, 0.0f, 0.0f, 1.0f,
-		0.5f, 0.5f, 0.0f, 1.0f,
-		0.0f, 1.0f, 0.0f, 1.0f,
-		0.0f, 0.5f, 0.5f, 1.0f,
-		0.0f, 0.0f, 1.0f, 1.0f
-	};
+	//GLfloat colors[] = {
+	//	1.0f, 0.0f, 0.0f, 1.0f,
+	//	0.5f, 0.5f, 0.0f, 1.0f,
+	//	0.0f, 1.0f, 0.0f, 1.0f,
+	//	0.0f, 0.5f, 0.5f, 1.0f,
+	//	0.0f, 0.0f, 1.0f, 1.0f
+	//};
 
-	calcAverageNormals(indices, 18, vertices, 40, 8, 5);
+	//calcAverageNormals(indices, 18, vertices, 40, 8, 5);
 
-	Object* pyramid = new Object();
-	Mesh* pyramidMesh = new Mesh();
-	pyramidMesh->CreateMesh(vertices, colors, indices, 40, 20, 18);
-	pyramid->SetMesh(pyramidMesh);
-	objects.push_back(pyramid);
-
-	uint32_t floorIndices[] = {
-		0, 2, 1,
-		1, 2, 3
-	};
-
-	GLfloat floorVertices[] = {
-		-10.0f, 0.0f, -10.0f,	0.0f, 0.0f,		0.0f, -1.0f, 0.0f,
-		10.0f, 0.0f, -10.0f,	10.0f, 0.0f,	0.0f, -1.0f, 0.0f,
-		-10.0f, 0.0f, 10.0f,	0.0f, 10.0f,	0.0f, -1.0f, 0.0f,
-		10.0f, 0.0f, 10.0f,		10.0f, 10.0f,	0.0f, -1.0f, 0.0f
-	};
-
-	GLfloat floorColors[] = {
-		1.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 1.0f
-	};
-
-	Object* floor = new Object();
-	Mesh* floorMesh = new Mesh();
-	floorMesh->CreateMesh(floorVertices, floorColors, floorIndices, 32, 16, 6);
-	floor->SetMesh(floorMesh);
-	objects.push_back(floor);
+	Object* cat = new Object();
+	cat->SetModel("Models/12221_Cat_v1_l3.obj");
+	cat->SetTranslation(0.0f, -5.0f, -10.0f);
+	cat->SetRotation(-90.0f, 0.0f, 0.0f);
+	cat->SetScaling(0.25f, 0.25f, 0.25f);
+	objects.push_back(cat);
 }
 
 void CreateShaders() {
@@ -176,20 +150,7 @@ void CreateShaders() {
 	shaders.push_back(mainShader);
 }
 
-void UpdateMVP() {
-	// TODO: Move translating, scaling, rotation into Object
-	mat4 model{ 1.0f };
-	vec3 translation{ 0.0f, 0.0f, -2.5f };
-	model = translate(model, translation);
-
-	vec3 yAxis = vec3(0.0f, 1.0f, 0.0f);
-	vec3 zAxis = vec3(0.0f, 0.0f, 1.0f);
-
-	vec3 axis = yAxis;
-	//model = rotate(model, currentAngle * TORADIANS, axis);
-	vec3 scaling{ 0.5f, 0.5f, 0.5f };
-	model = scale(model, scaling);
-
+void UpdateMVP(mat4 model) {
 	mat4 projection{ 1.0f };
 	projection = perspective(
 		45.0f, window.GetBufferWidth() / window.GetBufferHeight(), 0.1f, 100.0f);
@@ -212,8 +173,6 @@ void DrawFrame() {
 		shader->UseShader();
 	}
 
-	UpdateMVP();
-
 	GLuint uniformEyePosition = shaders[0]->GetEyePositionLocation();
 	GLuint uniformSpecularIntensity = shaders[0]->GetSpecularIntensityLocation();
 	GLuint uniformShininess = shaders[0]->GetShininessLocation();
@@ -235,10 +194,9 @@ void DrawFrame() {
 	shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
 
 	for (Object* obj : objects) {
+		UpdateMVP(obj->GetTransformMatrix());
 		obj->Update();
 	}
-
-	catModel.RenderModel();
 
 	glUseProgram(0);
 
@@ -263,9 +221,6 @@ int main() {
 		defaultTexture.LoadTextureRGBA();
 
 		shinyMaterial = Material(1.0f, 32.0f);
-
-		catModel = Model();
-		catModel.LoadModel("Models/12221_Cat_v1_l3.obj");
 
 		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.1f, 0.0f,
 									 2.0f, -1.0f, 2.0f);

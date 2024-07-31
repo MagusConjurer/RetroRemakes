@@ -1,25 +1,28 @@
 #include "Model.h"
 
 Model::Model() {
+	// TODO: Load a default model
 }
 
 Model::~Model() {
 	ClearModel();
 }
 
-void Model::LoadModel(const std::string& fileName) {
+bool Model::LoadModel(const std::string& fileName) {
 	Assimp::Importer importer;
 	unsigned int flags = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices;
 	const aiScene* scene = importer.ReadFile(fileName, flags);
 
 	if (!scene) {
 		printf("Model (%s) failed to load: %s", fileName, importer.GetErrorString());
-		return;
+		return false;
 	}
 
 	LoadNode(scene->mRootNode, scene);
 
 	LoadMaterials(scene);
+
+	return true;
 }
 
 void Model::RenderModel() {
