@@ -6,6 +6,7 @@ in vec4 vColor;
 in vec2 texCoord;
 in vec3 normal;
 in vec3 fragPos;
+in vec4 directionalLightSpacePos;
 
 out vec4 fColor;
 
@@ -50,29 +51,62 @@ uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 
 uniform sampler2D textureData;
+uniform sampler2D directionalShadowMap;
 uniform Material material;
 uniform vec3 eyePosition;
 
-vec4 CalculateLightByDirection(Light light, vec3 direction) {
-    vec4 ambientColor = vec4(light.color, 1.0f) * light.ambientIntensity;
+float CalcDirectionalShadowFactor(DirectionalLight light) {
+    // calculate in normalized device coordinates between -1, 1
+    vec3 projectedCoords = directionalLightSpacePos.xyz / directionalLightSpacePos.w;
+    // Shift to be between 0, 1 that depth map expects
+    projectedCoords = (projectedCoords * 0.5) + 0.5;
+
+    float current = projectedCoords.z;
+
+    vec3 n = normalize(normal);
+    vec3 lightDir = normalize(light.direction);
+    float bias = max(0.05 * (1.0 - dot(n,lightDir)), 0.005);
+
+    // Get average shadow color of the 3x3 square with this texel in the middle
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(directionalShadowMap, 0);
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            float pcfDepth = texture(directionalShadowMap, projectedCoords.xy + vec2(x,y) * texelSize).r;
+            shadow += current - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+
+    shadow /= 9.0;
+
+    // Handle when it is past the far plane
+    if (projectedCoords.z > 1.0) {
+        shadow = 0.0;
+    }
+
+    return shadow;
+}
+
+vec4 CalculateLightByDirection(Light light, vec3 direction, float shadowFactor) {
+    vec4 ambientColor = vec4(light.color, 1.0) * light.ambientIntensity;
 
     // Value between 0 and 1
-    float diffuseFactor = max(dot(normalize(normal), -normalize(direction)), 0.0f);
-    vec4 diffuseColor = vec4(light.color, 1.0f) * light.diffuseIntensity * diffuseFactor;
+    float diffuseFactor = max(dot(normalize(normal), -normalize(direction)), 0.0);
+    vec4 diffuseColor = vec4(light.color, 1.0) * light.diffuseIntensity * diffuseFactor;
 
-    vec4 specularColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    if(diffuseFactor > 0.0f) {
+    vec4 specularColor = vec4(0.0, 0.0, 0.0, 0.0);
+    if(diffuseFactor > 0.0) {
         vec3 fragToEye = normalize(eyePosition - fragPos);
         vec3 reflectedVertex = normalize(reflect(direction, normalize(normal)));
 
         float specularFactor = dot(fragToEye, reflectedVertex);
-        if (specularFactor > 0.0f) {
+        if (specularFactor > 0.0) {
             specularFactor = pow(specularFactor, material.shininess);
-            specularColor = vec4(light.color * material.specularIntensity * specularFactor, 1.0f);
+            specularColor = vec4(light.color * material.specularIntensity * specularFactor, 1.0);
         }
     }
 
-    return ambientColor + diffuseColor + specularColor;
+    return ambientColor + (1.0 - shadowFactor) * (diffuseColor + specularColor);
 }
 
 vec4 CalculatePointLight(PointLight pLight) {
@@ -80,7 +114,7 @@ vec4 CalculatePointLight(PointLight pLight) {
     float distance = length(direction);
     direction = normalize(direction);
 
-    vec4 currentColor = CalculateLightByDirection(pLight.base, direction);
+    vec4 currentColor = CalculateLightByDirection(pLight.base, direction, 0.0);
     // ax^2 + bx + c
     float attenuation = pLight.exponent * distance * distance + pLight.linear * distance + pLight.constant;
 
@@ -94,14 +128,15 @@ vec4 CalculateSpotLight(SpotLight sLight) {
     if(slFactor > sLight.edge) {
         vec4 color = CalculatePointLight(sLight.base);
 
-        return color * (1.0f - ((1.0f - slFactor) * (1.0f/(1.0f - sLight.edge))));
+        return color * (1.0 - ((1.0 - slFactor) * (1.0/(1.0 - sLight.edge))));
     } else {
         return vec4(0, 0, 0, 0);
     }
 }
 
 vec4 CalculateDirectionalLight() {
-    return CalculateLightByDirection(directionalLight.base, directionalLight.direction);
+    float shadowFactor = CalcDirectionalShadowFactor(directionalLight);
+    return CalculateLightByDirection(directionalLight.base, directionalLight.direction, shadowFactor);
 }
 
 vec4 CalculatePointLights() {

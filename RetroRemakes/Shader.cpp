@@ -1,6 +1,7 @@
 #include "Shader.h"
 
 #include <stdexcept>
+#include <glm\gtc\type_ptr.hpp>
 using std::runtime_error;
 using std::string;
 
@@ -113,6 +114,18 @@ void Shader::SetSpotLights(SpotLight* sLights, unsigned int spotLightCount) {
 	}
 }
 
+void Shader::SetTexture(GLuint textureUnit) {
+	glUniform1i(uniformTexture, textureUnit);
+}
+
+void Shader::SetDirectionalShadowMap(GLuint textureUnit) {
+	glUniform1i(uniformDirectionalShadowMap, textureUnit);
+}
+
+void Shader::SetDirectionalLightTransform(glm::mat4* transform) {
+	glUniformMatrix4fv(uniformDirectionalLightTransform, 1, GL_FALSE, glm::value_ptr(*transform));
+}
+
 void Shader::UseShader() {
 	glUseProgram(shaderID);
 }
@@ -222,6 +235,10 @@ void Shader::CompileShader(const char* vs_source, const char* fs_source) {
 		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].edge", j);
 		uniformSpotLights[j].uniformEdge = glGetUniformLocation(shaderID, locBuff);
 	}
+
+	uniformTexture = glGetUniformLocation(shaderID, "textureData");
+	uniformDirectionalLightTransform = glGetUniformLocation(shaderID, "directionalLightTransform");
+	uniformDirectionalShadowMap = glGetUniformLocation(shaderID, "directionalShadowMap");
 }
 
 void Shader::AddShader(GLuint program, const char* source, GLenum shaderType) {

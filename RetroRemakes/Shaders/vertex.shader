@@ -9,13 +9,17 @@ out vec4 vColor;
 out vec2 texCoord;
 out vec3 normal;
 out vec3 fragPos;
+out vec4 directionalLightSpacePos;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 directionalLightTransform;
 
 void main() {
     gl_Position = projection * view * model * vec4(pos, 1.0);
+    directionalLightSpacePos = directionalLightTransform * model * vec4(pos, 1.0);
+
     vColor = col;
 
     texCoord = tex;

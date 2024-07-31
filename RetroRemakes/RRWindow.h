@@ -21,6 +21,7 @@ public:
 	RRWindow();
 	RRWindow(GLint windowWidth, GLint windowHeight);
 	void InitWindow();
+	void SetViewport();
 	GLfloat GetBufferWidth();
 	GLfloat GetBufferHeight();
 	bool GetShouldClose();

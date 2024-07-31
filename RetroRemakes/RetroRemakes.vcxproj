@@ -145,6 +145,7 @@
     <ClCompile Include="RRDataStructures.cpp" />
     <ClCompile Include="RRWindow.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
@@ -161,10 +162,13 @@
     <ClInclude Include="RRDataStructures.h" />
     <ClInclude Include="RRWindow.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="directional_shadow_map_frag.shader" />
+    <None Include="directional_shadow_map_vert.shader" />
     <None Include="Shaders\fragment.shader" />
     <None Include="Shaders\vertex.shader" />
   </ItemGroup>

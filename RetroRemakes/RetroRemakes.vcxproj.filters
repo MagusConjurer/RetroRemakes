@@ -57,6 +57,9 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RRWindow.h">
@@ -101,9 +104,14 @@
     <ClInclude Include="Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\fragment.shader" />
     <None Include="Shaders\vertex.shader" />
+    <None Include="directional_shadow_map_vert.shader" />
+    <None Include="directional_shadow_map_frag.shader" />
   </ItemGroup>
 </Project>

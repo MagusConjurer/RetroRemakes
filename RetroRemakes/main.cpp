@@ -37,9 +37,14 @@ static const char* vs_source = "Shaders/vertex.shader";
 // Fragment Shader
 static const char* fs_source = "Shaders/fragment.shader";
 
+// Directional Shadow Map Shaders
+static const char* dsvs_source = "Shaders/directional_shadow_map_vert.shader";
+static const char* dsfs_source = "Shaders/directional_shadow_map_frag.shader";
+
 RRWindow window;
 std::vector<Object*> objects;
 std::vector<Shader*> shaders;
+Shader directionalShadowShader;
 Camera camera;
 
 Texture leavesTexture;
@@ -60,49 +65,6 @@ GLfloat lastTime = 0.0f;
 float currentAngle = 0.0f;
 
 Color defaultBackground = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-void calcAverageNormals(unsigned int* indices, unsigned int indiceCount, 
-						GLfloat* vertices, unsigned int verticeCount,
-						unsigned int vLength, unsigned int normalOffset) {
-	for (size_t i = 0; i < indiceCount; i += 3) {
-		// Calculate index of each value from indices in the vertices
-		unsigned int in0 = indices[i] * vLength;
-		unsigned int in1 = indices[i + 1] * vLength;
-		unsigned int in2 = indices[i + 2] * vLength;
-
-		//      x							   y									  z
-		vec3 v1(vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
-		vec3 v2(vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
-		// Use cross product to get perpendicular vector to the two
-		vec3 normal = cross(v1, v2);
-		normal = normalize(normal);
-
-		in0 += normalOffset;
-		in1 += normalOffset;
-		in2 += normalOffset;
-
-		vertices[in0] += normal.x;
-		vertices[in0 + 1] += normal.y;
-		vertices[in0 + 2] += normal.z;
-
-		vertices[in1] += normal.x;
-		vertices[in1 + 1] += normal.y;
-		vertices[in1 + 2] += normal.z;
-
-		vertices[in2] += normal.x;
-		vertices[in2 + 1] += normal.y;
-		vertices[in2 + 2] += normal.z;
-	}
-
-	for (size_t j = 0; j < verticeCount / vLength; j++) {
-		unsigned int offset = j * vLength + normalOffset;
-		vec3 vec(vertices[offset], vertices[offset + 1], vertices[offset + 2]);
-		vec = normalize(vec);
-		vertices[offset] = vec.x;
-		vertices[offset + 1] = vec.y;
-		vertices[offset + 2] = vec.z;
-	}
-}
 
 void CreateTextures() {
 	leavesTexture = Texture("Textures/green-plant-leaves-512x512.png");
@@ -139,55 +101,65 @@ void CreateShaders() {
 	Shader* mainShader = new Shader();
 	mainShader->CreateFromFiles(vs_source, fs_source);
 	shaders.push_back(mainShader);
+
+	directionalShadowShader = Shader();
+	directionalShadowShader.CreateFromFiles(dsvs_source, dsfs_source);
 }
 
-void UpdateMVP(mat4 model) {
-	mat4 projection{ 1.0f };
-	projection = perspective(
-		45.0f, window.GetBufferWidth() / window.GetBufferHeight(), 0.1f, 100.0f);
-
-	GLuint uniformModel = shaders[0]->GetModelLocation();
-	GLuint uniformView = shaders[0]->GetViewLocation();
-	GLuint uniformProjection = shaders[0]->GetProjectionLocation();
-
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, value_ptr(model));
-	glUniformMatrix4fv(uniformView, 1, GL_FALSE, value_ptr(camera.calculateViewMatrix()));
-	glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, value_ptr(projection));
+void RenderScene(Shader* shader) {
+	for (Object* obj : objects) {
+		glUniformMatrix4fv(shader->GetModelLocation(), 1, GL_FALSE, value_ptr(obj->GetTransformMatrix()));
+		obj->GetMaterial()->UseMaterial(shader->GetSpecularIntensityLocation(), shader->GetShininessLocation());
+		obj->Update();
+	}
 }
 
-void DrawFrame() {
-	glClearColor(defaultBackground.r, defaultBackground.g, defaultBackground.b,
-				 defaultBackground.a);
+void DirectionalShadowMapPass(DirectionalLight* light) {
+	directionalShadowShader.UseShader();
+
+	glViewport(0, 0, light->GetShadowMap()->GetShadowWidth(), light->GetShadowMap()->GetShadowHeight());
+
+	light->GetShadowMap()->Write();
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	mat4 transform = light->CalculateLightTransform();
+	directionalShadowShader.SetDirectionalLightTransform(&transform);
+
+	RenderScene(&directionalShadowShader);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderPass(glm::mat4 projection, glm::mat4 view) {
+	shaders[0]->UseShader();
+
+	// Reset viewport to the window settings
+	window.SetViewport();
+
+	glClearColor(defaultBackground.r, defaultBackground.g, defaultBackground.b, defaultBackground.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for (Shader* shader : shaders) {
-		shader->UseShader();
-	}
-
-	GLuint uniformEyePosition = shaders[0]->GetEyePositionLocation();
-	GLuint uniformSpecularIntensity = shaders[0]->GetSpecularIntensityLocation();
-	GLuint uniformShininess = shaders[0]->GetShininessLocation();
-
 	vec3 eyePos = camera.getCameraPosition();
-	glUniform3f(uniformEyePosition, eyePos.x, eyePos.y, eyePos.z);
+
+	glUniformMatrix4fv(shaders[0]->GetViewLocation(), 1, GL_FALSE, value_ptr(view));
+	glUniformMatrix4fv(shaders[0]->GetProjectionLocation(), 1, GL_FALSE, value_ptr(projection));
+	glUniform3f(shaders[0]->GetEyePositionLocation(), eyePos.x, eyePos.y, eyePos.z);
+
+	shaders[0]->SetDirectionalLight(&mainLight);
+	shaders[0]->SetPointLights(pointLights, pointLightCount);
+	shaders[0]->SetSpotLights(spotLights, spotLightCount);
+	mat4 transform = mainLight.CalculateLightTransform();
+	shaders[0]->SetDirectionalLightTransform(&transform);
+
+	mainLight.GetShadowMap()->Read(GL_TEXTURE1);
+	shaders[0]->SetTexture(0);
+	shaders[0]->SetDirectionalShadowMap(1);
 
 	vec3 flashlightPos = camera.getCameraPosition();
 	flashlightPos.y -= 0.3f;
 	spotLights[0].Follow(flashlightPos, camera.getCameraDirection());
 
-	shaders[0]->SetDirectionalLight(&mainLight);
-	shaders[0]->SetPointLights(pointLights, pointLightCount);
-	shaders[0]->SetSpotLights(spotLights, spotLightCount);
-
-	for (Object* obj : objects) {
-		UpdateMVP(obj->GetTransformMatrix());
-		obj->GetMaterial()->UseMaterial(uniformSpecularIntensity, uniformShininess);
-		obj->Update();
-	}
-
-	glUseProgram(0);
-
-	window.SwapBuffers();
+	RenderScene(shaders[0]);
 }
 
 int main() {
@@ -200,9 +172,9 @@ int main() {
 		CreateShaders();
 
 		camera = Camera(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
-
-		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.1f, 0.0f,
-									 2.0f, -1.0f, 2.0f);
+		
+		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.1f, 0.8f,
+									 0.0f, -5.0f, 0.0f, 2048, 2048);
 		
 		pointLightCount = 0;
 
@@ -218,7 +190,11 @@ int main() {
 		spotLights[0] = SpotLight(1.0, 1.0, 1.0f, 1.0f, 1.0f,
 								  0.0f, 1.0f, -2.0f, 0.0f, -1.0f, 0.0f,
 								  3.0f, 0.0f, 0.0f, 20.0f);
-		spotLightCount++;
+		//spotLightCount++;
+
+		mat4 projection{ 1.0f };
+		projection = perspective(
+			45.0f, window.GetBufferWidth() / window.GetBufferHeight(), 0.1f, 100.0f);
 
 		// Loop until window closed
 		while (!window.GetShouldClose()) {
@@ -233,12 +209,13 @@ int main() {
 			camera.keyControl(deltaTime, window.GetStateOfKeys());
 			camera.mouseControl(window.GetMouseXChange(), window.GetMouseYChange());
 
-			currentAngle += 0.1f;
-			if (currentAngle >= 360.0f) {
-				currentAngle -= 360.0f;
-			}
+			DirectionalShadowMapPass(&mainLight);
 
-			DrawFrame();
+			RenderPass(projection, camera.calculateViewMatrix());
+
+			glUseProgram(0);
+
+			window.SwapBuffers();
 		}
 	}
 	catch (const exception& except) {

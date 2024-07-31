@@ -28,6 +28,9 @@ void RRWindow::InitialSetup(int windowWidth, int windowHeight) {
 	}
 }
 
+void RRWindow::SetViewport() {
+	glViewport(0, 0, bufferWidth, bufferHeight);
+}
 
 GLfloat RRWindow::GetBufferWidth() {
 	return bufferWidth;
@@ -141,7 +144,7 @@ void RRWindow::InitWindow() {
 	// Enable depth buffer so correct triangles are drawn on top
 	glEnable(GL_DEPTH_TEST);
 
-	glViewport(0, 0, bufferWidth, bufferHeight);
+	SetViewport();
 
 	glfwSetWindowUserPointer(mainWindow, this);
 }

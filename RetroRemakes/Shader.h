@@ -9,11 +9,13 @@
 #include <string>
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
+#include "CommonValues.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
-#include "CommonValues.h"
+
 
 class Shader {
 public:
@@ -35,6 +37,10 @@ public:
 	void SetPointLights(PointLight* pLights, unsigned int lightCount);
 	void SetSpotLights(SpotLight* sLights, unsigned int spotLightCount);
 
+	void SetTexture(GLuint textureUnit);
+	void SetDirectionalShadowMap(GLuint textureUnit);
+	void SetDirectionalLightTransform(glm::mat4* transform);
+
 	void UseShader();
 	void ClearShader();
 
@@ -49,6 +55,9 @@ private:
 	GLuint uniformShininess;
 	GLuint uniformPointLightCount;
 	GLuint uniformSpotLightCount;
+	GLuint uniformTexture;
+	GLuint uniformDirectionalLightTransform;
+	GLuint uniformDirectionalShadowMap;
 
 	int pointLightCount;
 	int spotLightCount;
