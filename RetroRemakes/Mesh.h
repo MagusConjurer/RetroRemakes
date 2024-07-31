@@ -1,10 +1,9 @@
 #pragma once
 
-#ifndef MESH
-#define MESH
-
 #include <GL\glew.h>
 
+#ifndef MESH
+#define MESH
 class Mesh {
 public:
 	Mesh();

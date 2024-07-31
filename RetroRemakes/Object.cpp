@@ -13,17 +13,29 @@ using glm::scale;
 
 Object::Object() {
 	objModel = Model();
+	objMaterial = new Material(0.3f, 4.0f);
+
 	translation = { 0.0f, 0.0f, 0.0f };
 	rotation = { 0.0f, 0.0f, 0.0f };
 	scaling = { 1.0f, 1.0f, 1.0f };
 }
 
-Object::~Object() {}
+Object::~Object() {
+	objMaterial = nullptr;
+}
 
 void Object::SetModel(const char* filename) {
 	if (!objModel.LoadModel(filename)) {
 		throw runtime_error("Failed to set model!");
 	}
+}
+
+void Object::SetMaterial(Material* material) {
+	objMaterial = material;
+}
+
+Material* Object::GetMaterial() {
+	return objMaterial;
 }
 
 void Object::Update() {

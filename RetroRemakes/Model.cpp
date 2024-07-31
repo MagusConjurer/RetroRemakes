@@ -1,7 +1,6 @@
 #include "Model.h"
 
 Model::Model() {
-	// TODO: Load a default model
 }
 
 Model::~Model() {

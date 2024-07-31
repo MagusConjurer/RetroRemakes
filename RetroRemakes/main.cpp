@@ -46,8 +46,6 @@ Texture leavesTexture;
 Texture defaultTexture;
 Material shinyMaterial;
 
-Model catModel;
-
 DirectionalLight mainLight;
 PointLight pointLights[MAX_POINT_LIGHTS];
 unsigned int pointLightCount = 0;
@@ -106,41 +104,34 @@ void calcAverageNormals(unsigned int* indices, unsigned int indiceCount,
 	}
 }
 
+void CreateTextures() {
+	leavesTexture = Texture("Textures/green-plant-leaves-512x512.png");
+	leavesTexture.LoadTextureRGBA();
+
+	defaultTexture = Texture("Textures/default.png");
+	defaultTexture.LoadTextureRGBA();
+}
+
+void CreateMaterials() {
+	shinyMaterial = Material(1.0f, 32.0f);
+}
+
 void CreateObjects() {
-	//// Create pyramid
-	//uint32_t indices[] = {
-	//	0, 1, 2,
-	//	0, 1, 4,
-	//	1, 2, 4,
-	//	2, 3, 0,
-	//	2, 3, 4,
-	//	3, 0, 4
-	//};
 
-	//GLfloat vertices[] = {
-	////  x      y      z     u     v			normals placeholder
-	//	-1.0f, 0.0f,  1.0f, 0.25f, 0.25f,	0.0f, 0.0f, 0.0f,
-	//	1.0f,  0.0f, 1.0f,	0.75f,  0.25f,	0.0f, 0.0f, 0.0f,
-	//	1.0f, 0.0f, -1.0f,	0.75f, 0.75f,	0.0f, 0.0f, 0.0f,
-	//	-1.0f, 0.0f, -1.0f, 0.25f, 0.75f,	0.0f, 0.0f, 0.0f,
-	//	0.0f, 1.0f, 0.0f,	0.5f, 0.5f,		0.0f, 0.0f, 0.0f
-	//};
+	CreateMaterials();
 
-	//GLfloat colors[] = {
-	//	1.0f, 0.0f, 0.0f, 1.0f,
-	//	0.5f, 0.5f, 0.0f, 1.0f,
-	//	0.0f, 1.0f, 0.0f, 1.0f,
-	//	0.0f, 0.5f, 0.5f, 1.0f,
-	//	0.0f, 0.0f, 1.0f, 1.0f
-	//};
-
-	//calcAverageNormals(indices, 18, vertices, 40, 8, 5);
+	Object* floor = new Object();
+	floor->SetModel("Models/cube.obj");
+	floor->SetMaterial(&shinyMaterial);
+	floor->SetTranslation(0.0f, -1.0f, 0.0f);
+	floor->SetScaling(10.0f, 1.0f, 10.0f);
+	objects.push_back(floor);
 
 	Object* cat = new Object();
 	cat->SetModel("Models/12221_Cat_v1_l3.obj");
-	cat->SetTranslation(0.0f, -5.0f, -10.0f);
+	cat->SetTranslation(0.0f, 0.0f, -5.0f);
 	cat->SetRotation(-90.0f, 0.0f, 0.0f);
-	cat->SetScaling(0.25f, 0.25f, 0.25f);
+	cat->SetScaling(0.1f, 0.1f, 0.1f);
 	objects.push_back(cat);
 }
 
@@ -188,13 +179,9 @@ void DrawFrame() {
 	shaders[0]->SetPointLights(pointLights, pointLightCount);
 	shaders[0]->SetSpotLights(spotLights, spotLightCount);
 
-	// TODO: Move into object update so that they can have unique textures
-	//leavesTexture.UseTexture();
-	defaultTexture.UseTexture();
-	shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
-
 	for (Object* obj : objects) {
 		UpdateMVP(obj->GetTransformMatrix());
+		obj->GetMaterial()->UseMaterial(uniformSpecularIntensity, uniformShininess);
 		obj->Update();
 	}
 
@@ -213,14 +200,6 @@ int main() {
 		CreateShaders();
 
 		camera = Camera(vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.5f);
-
-		leavesTexture = Texture((char*)("Textures/green-plant-leaves-512x512.png"));
-		leavesTexture.LoadTextureRGBA();
-
-		defaultTexture = Texture((char*)("Textures/default.png"));
-		defaultTexture.LoadTextureRGBA();
-
-		shinyMaterial = Material(1.0f, 32.0f);
 
 		mainLight = DirectionalLight(1.0f, 1.0f, 1.0f, 0.1f, 0.0f,
 									 2.0f, -1.0f, 2.0f);

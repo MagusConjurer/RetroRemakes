@@ -1,8 +1,10 @@
 #pragma once
 
 #include "glm/glm.hpp"
+#include <vector>
 
 #include "Model.h"
+#include "Material.h"
 
 #ifndef OBJECT
 #define OBJECT
@@ -11,6 +13,8 @@ public:
 	Object();
 
 	void SetModel(const char* filename);
+	void SetMaterial(Material* material);
+	Material* GetMaterial();
 	void Update();
 
 	void SetTranslation(GLfloat x, GLfloat y, GLfloat z);
@@ -39,12 +43,11 @@ public:
 	~Object();
 private:
 	Model objModel;
+	Material* objMaterial;
 
 	glm::vec3 translation;
 	glm::vec3 rotation;
 	glm::vec3 scaling;
-
-	
 };
 
 #endif
